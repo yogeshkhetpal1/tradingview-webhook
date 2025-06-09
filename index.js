@@ -1,5 +1,5 @@
 const express = require('express');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 
 const app = express();
 app.use(express.json());
@@ -7,15 +7,30 @@ app.use(express.json());
 app.post('/webhook', (req, res) => {
   console.log('Received webhook:', req.body);
 
-  const payload = JSON.stringify(req.body);
+  const pythonProcess = spawn('python3', ['place_order.py']);
 
-  exec(`python3 place_order.py '${payload}'`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`❌ Exec error: ${error.message}`);
+  // Send JSON payload via stdin
+  pythonProcess.stdin.write(JSON.stringify(req.body));
+  pythonProcess.stdin.end();
+
+  let stdout = '';
+  let stderr = '';
+
+  pythonProcess.stdout.on('data', (data) => {
+    stdout += data.toString();
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    stderr += data.toString();
+  });
+
+  pythonProcess.on('close', (code) => {
+    if (code !== 0) {
+      console.error(`❌ Python exited with code ${code}`);
+      console.error(`stderr: ${stderr}`);
       return res.status(500).send('Order failed');
     }
-    if (stderr) console.error(`⚠️ STDERR: ${stderr}`);
-    console.log(`✅ STDOUT: ${stdout}`);
+    console.log(`✅ Python output: ${stdout}`);
     res.send('Order processed');
   });
 });
