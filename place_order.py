@@ -1,22 +1,24 @@
-# place_order.py
 import sys
 import json
-from ib_insync import *
 
-ib = IB()
-ib.connect('127.0.0.1', 7497, clientId=1)
+def main():
+    try:
+        data = json.load(sys.stdin)
+        print(f"Received data: {data}")
 
-# Read input
-data = json.loads(sys.argv[1])
-symbol = data.get('ticker')
-action = data.get('action', 'BUY')
-qty = 1  # You can make this dynamic
+        # Example: print the action and ticker
+        action = data.get('action')
+        ticker = data.get('ticker')
+        price = data.get('price')
 
-contract = Stock(symbol, 'SMART', 'USD')
-market_data = ib.reqMktData(contract, '', False, False)
-ib.sleep(2)
-ib.cancelMktData(contract)
+        print(f"Action: {action}, Ticker: {ticker}, Price: {price}")
 
-order = MarketOrder(action, qty)
-ib.placeOrder(contract, order)
-ib.disconnect()
+        # TODO: Put your IBKR order placing code here
+
+        print("Order placed successfully!")  # Or your real status message
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
