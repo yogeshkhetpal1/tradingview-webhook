@@ -1,18 +1,24 @@
 const express = require('express');
-const app = express();
+const { exec } = require('child_process');
 
-// Middleware to parse JSON from incoming requests
+const app = express();
 app.use(express.json());
 
-// Webhook POST endpoint
 app.post('/webhook', (req, res) => {
   console.log('Received webhook:', req.body);
-  res.status(200).send('Webhook received!');
+
+  const payload = JSON.stringify(req.body);
+
+  exec(`python3 place_order.py '${payload}'`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`❌ Exec error: ${error.message}`);
+      return res.status(500).send('Order failed');
+    }
+    if (stderr) console.error(`⚠️ STDERR: ${stderr}`);
+    console.log(`✅ STDOUT: ${stdout}`);
+    res.send('Order processed');
+  });
 });
 
-// Use the port assigned by Render or default to 10000
-const PORT = process.env.PORT || 10000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
