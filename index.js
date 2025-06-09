@@ -14,15 +14,15 @@ app.post('/webhook', (req, res) => {
   let stdout = '';
   let stderr = '';
 
-  pyProcess.stdout.on('data', data => {
+  pyProcess.stdout.on('data', (data) => {
     stdout += data.toString();
   });
 
-  pyProcess.stderr.on('data', data => {
+  pyProcess.stderr.on('data', (data) => {
     stderr += data.toString();
   });
 
-  pyProcess.on('close', code => {
+  pyProcess.on('close', (code) => {
     if (code !== 0) {
       console.error(`Python script exited with code ${code}`);
       console.error(`Stderr: ${stderr}`);
